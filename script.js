@@ -1,42 +1,72 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // تحديد العناصر من DOM
+    const addButton = document.getElementById('add-task-btn');
+    const taskInput = document.getElementById('task-input');
+    const taskList = document.getElementById('task-list');
 
-    // Select DOM elements
-    const addButton = document.getElementById('add-task-btn'); // Add Task button
-    const taskInput = document.getElementById('task-input'); // Input field for new tasks
-    const taskList = document.getElementById('task-list'); // UL to display tasks
+    // تحميل المهام من Local Storage عند بداية الصفحة
+    function loadTasks() {
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        storedTasks.forEach(taskText => addTask(taskText, false));
+    }
 
-    // Function to add a new task
-    function addTask() {
-        const taskText = taskInput.value.trim(); // Get input text and trim whitespace
-        if (taskText === "") return; // Do nothing if input is empty
+    // إضافة مهمة جديدة
+    function addTask(taskText = null, save = true) {
+        let text = taskText || taskInput.value.trim();
 
-        // Create task element
+        if (text === "") {
+            alert("Please enter a task!");
+            return;
+        }
+
+        // إنشاء عناصر li و زر الحذف
         const li = document.createElement('li');
-        li.textContent = taskText;
+        li.textContent = text;
 
-        // Create remove button
         const removeBtn = document.createElement('button');
         removeBtn.textContent = "Remove";
         removeBtn.className = 'remove-btn';
 
-        // Remove task when button is clicked
-        removeBtn.onclick = () => taskList.removeChild(li);
+        // حدث إزالة المهمة
+        removeBtn.onclick = () => {
+            li.remove();
+            updateLocalStorage();
+        };
 
-        // Append remove button to task
         li.appendChild(removeBtn);
-        // Append task to task list
         taskList.appendChild(li);
 
-        // Clear input field
+        // حفظ المهمة في Local Storage
+        if (save) {
+            const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            storedTasks.push(text);
+            localStorage.setItem('tasks', JSON.stringify(storedTasks));
+        }
+
         taskInput.value = "";
     }
 
-    // Event listener for Add Task button
-    addButton.addEventListener('click', addTask);
+    // تحديث Local Storage بعد حذف مهمة
+    function updateLocalStorage() {
+        const tasks = [];
+        taskList.querySelectorAll('li').forEach(li => {
+            // إزالة نص زر الحذف من النص
+            const taskText = li.firstChild.textContent;
+            tasks.push(taskText);
+        });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
 
-    // Event listener for Enter key on input field
+    // إضافة مهمة عند الضغط على زر Add
+    addButton.addEventListener('click', () => addTask());
+
+    // إضافة مهمة عند الضغط على Enter
     taskInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') addTask();
+        if (event.key === 'Enter') {
+            addTask();
+        }
     });
 
+    // تحميل المهام عند فتح الصفحة
+    loadTasks();
 });
